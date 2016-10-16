@@ -98,7 +98,10 @@ public class MicrosoftOCRTest
         return null;
     }
 
-    public static String runOCR(File img){
+    /*
+    Given a bitmap man
+     */
+    public static String runOCR(Bitmap myBitmap ){
         try {
             URL url = new URL("https://api.projectoxford.ai/vision/v1.0/ocr");
             HttpURLConnection connection = (HttpURLConnection)url.openConnection();
@@ -121,7 +124,6 @@ public class MicrosoftOCRTest
                     new OutputStreamWriter(os, "UTF-8"));
 
             //write body of image
-            Bitmap myBitmap = BitmapFactory.decodeFile(img.getAbsolutePath());
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             myBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
             byte[] outputInBytes = stream.toByteArray();
