@@ -14,7 +14,10 @@ import java.net.*;
 import java.io.*;
 
 import android.content.ContentValues;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.StrictMode;
 import android.renderscript.ScriptGroup;
 
 import com.google.gson.Gson;
@@ -37,7 +40,7 @@ public class MicrosoftOCRTest
     /**
      * Given jsonstring, prints it purty
      */
-    private static String toPrettyFormat(String jsonString)
+    public static String toPrettyFormat(String jsonString)
     {
         JsonParser parser = new JsonParser();
         JsonObject json = parser.parse(jsonString).getAsJsonObject();
@@ -52,7 +55,7 @@ public class MicrosoftOCRTest
      * given image url, returns json string describing text parsing.
      * returns null if there is an error
      */
-    public String runOCR(String img){
+    public static String runOCR(String img){
         try {
             URL url = new URL("https://api.projectoxford.ai/vision/v1.0/ocr");
             HttpURLConnection connection = (HttpURLConnection)url.openConnection();
@@ -88,15 +91,14 @@ public class MicrosoftOCRTest
             return jsonString;
         }
         catch(Exception e){
-            System.out.println("Failed");
+            System.out.println("Failed :(");
             e.printStackTrace();
         }
 
         return null;
     }
 
-    public static void main(String[] args)
-    {
+    public static String runOCR(File img){
         try {
             URL url = new URL("https://api.projectoxford.ai/vision/v1.0/ocr");
             HttpURLConnection connection = (HttpURLConnection)url.openConnection();
@@ -107,13 +109,9 @@ public class MicrosoftOCRTest
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Ocp-Apim-Subscription-Key",
-                                                    "7c24cf51af8041acadf92f02616ce96e");
+                    "7c24cf51af8041acadf92f02616ce96e");
 
-            //parameters of HTTP POST
-            //ContentValues values = new ContentValues();
-            //values.put("language", "unk");
-            //values.put("detectOrientation", "true");
-
+            //set some body parameters
             connection.setRequestProperty("language", "unk");
             connection.setRequestProperty("detectOrientation", "True");
 
@@ -121,27 +119,36 @@ public class MicrosoftOCRTest
             OutputStream os = connection.getOutputStream();
             BufferedWriter writer = new BufferedWriter(
                     new OutputStreamWriter(os, "UTF-8"));
-            //writer.write(query);
 
             //write body of image
-            String img = "http://searchengineland.com/figz/wp-content/" +
-                    "seloads/2011/08/sel-inm-200-600x256.png";
-            String str =  "{\"url\":\"" + img + "\"}";
-            byte[] outputInBytes = str.getBytes("UTF-8");
+            Bitmap myBitmap = BitmapFactory.decodeFile(img.getAbsolutePath());
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            myBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] outputInBytes = stream.toByteArray();
             os.write(outputInBytes);
 
             //read response
             InputStream in = connection.getInputStream();
 
             String jsonString = convertStreamToString(in);
-
-            System.out.println(toPrettyFormat(jsonString));
             os.close();
+
+            return jsonString;
         }
         catch(Exception e){
             System.out.println("Failed");
+            System.out.println(e);
             e.printStackTrace();
         }
+
+        return null;
+    }
+
+    public static void main(String[] args)
+    {
+        String jsonString = runOCR("https://c1.staticflickr.com/3/2775/4074957339_abea7ce5af_b.jpg");
+        //String jsonString = runOCR(new File("./receipt.jpg"));
+        System.out.println(toPrettyFormat(jsonString));
     }
 }
 
